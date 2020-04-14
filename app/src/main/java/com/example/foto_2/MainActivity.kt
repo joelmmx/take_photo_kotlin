@@ -9,7 +9,6 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import kotlinx.android.synthetic.main.activity_main.*
@@ -56,8 +55,32 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == REQUEST_PHOTO) {
             val uri = FileProvider.getUriForFile(applicationContext, "com.example.foto_2.filrprovider", file!!)
             applicationContext.revokeUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-            val bitmap = BitmapFactory.decodeFile(file!!.path)
-            imageView1.setImageBitmap(bitmap)
+            imageView1.viewTreeObserver.addOnGlobalLayoutListener {
+                imageView1.setImageBitmap(getScaleBitmap(file!!.path , imageView1.width , imageView1.height))
+            }
         }
+    }
+
+    fun getScaleBitmap(path: String?, desWidth: Int, destHeight: Int): Bitmap? {
+        //Read int the dimensions of the image on disk
+        var options = BitmapFactory.Options()
+        options.inJustDecodeBounds = true
+        BitmapFactory.decodeFile(path, options)
+        val srcWidth = options.outWidth.toFloat()
+        val srcHeight = options.outHeight.toFloat()
+
+        //Figure out how much to scale down by
+        var inSampleSize = 1
+        if (srcHeight > destHeight || srcWidth > desWidth) {
+            val heightScale = srcHeight / destHeight
+            val widthScale = srcWidth / desWidth
+            inSampleSize =
+                Math.round(if (heightScale > widthScale) heightScale else widthScale)
+        }
+        options = BitmapFactory.Options()
+        options.inSampleSize = inSampleSize
+
+        //Read in and create final bitmap
+        return BitmapFactory.decodeFile(path, options)
     }
 }
