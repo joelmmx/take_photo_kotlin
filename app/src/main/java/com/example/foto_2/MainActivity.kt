@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Point
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -18,6 +19,8 @@ import java.io.File
 class MainActivity : AppCompatActivity() {
     var file : File? = null
     val REQUEST_PHOTO = 2
+    var width  : Int = 0
+    var height : Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,8 +59,18 @@ class MainActivity : AppCompatActivity() {
             val uri = FileProvider.getUriForFile(applicationContext, "com.example.foto_2.filrprovider", file!!)
             applicationContext.revokeUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             imageView1.viewTreeObserver.addOnGlobalLayoutListener {
-                imageView1.setImageBitmap(getScaleBitmap(file!!.path , imageView1.width , imageView1.height))
+                width = imageView1.width
+                height = imageView1.height
+                imageView1.setImageBitmap(getScaleBitmap(file!!.path , width , height))
             }
+            if(width!=0&&height!=0){
+                imageView1.setImageBitmap(getScaleBitmap(file!!.path , width , height))
+            }else{
+                val size = Point()
+                this.windowManager.defaultDisplay.getSize(size)
+                imageView1.setImageBitmap(getScaleBitmap(file!!.path , size.x , size.y))
+            }
+
         }
     }
 
